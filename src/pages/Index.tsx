@@ -77,7 +77,7 @@ const Index = () => {
         )}
         
         <footer className="py-4 border-t text-center text-sm text-muted-foreground">
-          yaadHaru © {new Date().getFullYear()} - Your memories, beautifully preserved
+          YaadHaru © {new Date().getFullYear()} - Your memories, beautifully preserved
         </footer>
       </div>
     </ThemeProvider>

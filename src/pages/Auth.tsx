@@ -23,7 +23,7 @@ export default function Auth() {
       </div>
       
       <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-5xl font-bold mb-2">yaadHaru</h1>
+        <h1 className="text-4xl md:text-5xl font-bold mb-2">YaadHaru</h1>
         <p className="text-muted-foreground text-lg">Your Memory Journal</p>
       </div>
 
@@ -39,7 +39,7 @@ export default function Auth() {
       </div>
 
       <div className="mt-8 text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} yaadHaru. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} YaadHaru. All rights reserved.</p>
       </div>
     </div>
   );
