@@ -23,7 +23,10 @@ export default function Auth() {
       </div>
       
       <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-5xl font-bold mb-2">YaadHaru</h1>
+      <h1 className="mb-8 text-4xl font-bold">
+        <span className="text-white">Yaad</span>
+        <span className="text-purple-500">Haru</span>
+      </h1>
         <p className="text-muted-foreground text-lg">Your Memory Journal</p>
       </div>
 
