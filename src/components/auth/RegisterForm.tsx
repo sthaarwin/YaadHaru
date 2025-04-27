@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,8 +13,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Lock, Mail, User } from "lucide-react";
+import { Lock, Mail, User, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import { authAPI } from "@/api/strapiService";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -34,6 +34,8 @@ interface RegisterFormProps {
 }
 
 export default function RegisterForm({ onLoginClick }: RegisterFormProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -44,30 +46,38 @@ export default function RegisterForm({ onLoginClick }: RegisterFormProps) {
     },
   });
 
-  const onSubmit = (data: RegisterFormValues) => {
-    // Check if user already exists
-    const users = JSON.parse(localStorage.getItem("yaadHaru_users") || "[]");
-    const userExists = users.some((user: any) => user.email === data.email);
-
-    if (userExists) {
-      toast.error("User already exists with this email");
-      return;
-    }
-
-    // Add new user
-    const newUser = {
-      id: `user_${Date.now()}`,
-      name: data.name,
-      email: data.email,
-      password: data.password, // In a real app, you should hash this password
-      createdAt: new Date().toISOString(),
-    };
-
-    users.push(newUser);
-    localStorage.setItem("yaadHaru_users", JSON.stringify(users));
+  const onSubmit = async (data: RegisterFormValues) => {
+    setIsLoading(true);
     
-    toast.success("Registration successful! Please login.");
-    onLoginClick();
+    try {
+      // Register with Strapi
+      await authAPI.register(
+        data.name,
+        data.email,
+        data.password
+      );
+      
+      toast.success("Registration successful! You're now logged in.");
+      // Redirect to dashboard is handled by the Auth component since
+      // registration automatically logs the user in via Strapi
+      window.location.href = "/dashboard";
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      
+      // Handle different error scenarios
+      if (error.message?.toLowerCase().includes("email") || 
+          error.message?.toLowerCase().includes("already taken")) {
+        toast.error("This email address is already registered.");
+      } else if (error.message?.toLowerCase().includes("password")) {
+        toast.error("Password doesn't meet requirements. Please use at least 6 characters.");
+      } else if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error("Registration failed. Please try again later.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -161,14 +171,23 @@ export default function RegisterForm({ onLoginClick }: RegisterFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">Register</Button>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Registering...
+                </>
+              ) : (
+                "Register"
+              )}
+            </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex flex-col gap-2">
         <div className="text-sm text-muted-foreground text-center">
           Already have an account?{" "}
-          <Button variant="link" className="p-0" onClick={onLoginClick}>
+          <Button variant="link" className="p-0" onClick={onLoginClick} disabled={isLoading}>
             Sign in
           </Button>
         </div>

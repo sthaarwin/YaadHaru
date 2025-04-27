@@ -1,49 +1,81 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import YaadHeader from "@/components/YaadHeader";
 import Calendar from "@/components/Calendar";
 import MemoryDetail from "@/components/MemoryDetail";
 import { Memory } from "@/types/memory";
-import { getMemoriesForDate, saveMemoriesForDate } from "@/utils/storage";
 import { useToast } from "@/hooks/use-toast";
+import { authAPI, memoryAPI } from "@/api/strapiService";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [memories, setMemories] = useState<Memory[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
   // Check if user is logged in
   useEffect(() => {
-    const currentUser = localStorage.getItem("yaadHaru_currentUser");
+    const currentUser = authAPI.getCurrentUser();
     if (!currentUser) {
       navigate("/auth");
     }
   }, [navigate]);
 
-  const handleDateSelect = (date: Date) => {
+  const handleDateSelect = async (date: Date) => {
     setSelectedDate(date);
-    // Load memories for the selected date
-    const dateMemories = getMemoriesForDate(date);
-    setMemories(dateMemories);
+    setIsLoading(true);
+    
+    try {
+      const dateMemories = await memoryAPI.getMemoriesForDate(date);
+      setMemories(dateMemories);
+    } catch (error) {
+      console.error('Error loading memories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load memories. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  // Handle closing memory detail
   const handleCloseMemoryDetail = () => {
     setSelectedDate(null);
   };
   
-  // Handle saving memories
-  const handleSaveMemories = (updatedMemories: Memory[]) => {
+  const handleSaveMemories = async (updatedMemories: Memory[]) => {
     if (selectedDate) {
-      saveMemoriesForDate(selectedDate, updatedMemories);
-      setMemories(updatedMemories);
-      toast({
-        title: "Memories saved",
-        description: "Your memories have been saved successfully."
-      });
+      setIsLoading(true);
+      
+      try {
+        const success = await memoryAPI.saveMemoriesForDate(selectedDate, updatedMemories);
+        
+        if (success) {
+          setMemories(updatedMemories);
+          toast({
+            title: "Memories saved",
+            description: "Your memories have been saved successfully."
+          });
+        } else {
+          toast({
+            title: "Save failed",
+            description: "Failed to save memories. Please try again.",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Error saving memories:', error);
+        toast({
+          title: "Error",
+          description: "An error occurred while saving your memories.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -63,6 +95,7 @@ export default function Dashboard() {
             memories={memories}
             onClose={handleCloseMemoryDetail}
             onSave={handleSaveMemories}
+            isLoading={isLoading}
           />
         )}
       </div>

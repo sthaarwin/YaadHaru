@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,8 +14,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Lock, User } from "lucide-react";
+import { Lock, User, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import { authAPI } from "@/api/strapiService";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -31,6 +31,7 @@ interface LoginFormProps {
 
 export default function LoginForm({ onRegisterClick }: LoginFormProps) {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -40,30 +41,27 @@ export default function LoginForm({ onRegisterClick }: LoginFormProps) {
     },
   });
 
-  const onSubmit = (data: LoginFormValues) => {
-    // Check if user exists in localStorage
-    const users = JSON.parse(localStorage.getItem("yaadHaru_users") || "[]");
-    const user = users.find((u: any) => u.email === data.email);
-
-    if (!user) {
-      toast.error("User not found. Please register first.");
-      return;
+  const onSubmit = async (data: LoginFormValues) => {
+    setIsLoading(true);
+    
+    try {
+      // Login with Strapi
+      await authAPI.login(data.email, data.password);
+      
+      toast.success("Login successful!");
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      
+      // Handle different error scenarios
+      if (error.response?.status === 400) {
+        toast.error("Invalid email or password. Please try again.");
+      } else {
+        toast.error("Login failed. Please try again later.");
+      }
+    } finally {
+      setIsLoading(false);
     }
-
-    if (user.password !== data.password) {
-      toast.error("Incorrect password. Please try again.");
-      return;
-    }
-
-    // Set user as logged in
-    localStorage.setItem("yaadHaru_currentUser", JSON.stringify({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-    }));
-
-    toast.success("Login successful!");
-    navigate("/dashboard");
   };
 
   return (
@@ -111,14 +109,23 @@ export default function LoginForm({ onRegisterClick }: LoginFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">Sign in</Button>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
+            </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex flex-col gap-2">
         <div className="text-sm text-muted-foreground text-center">
           Don't have an account?{" "}
-          <Button variant="link" className="p-0" onClick={onRegisterClick}>
+          <Button variant="link" className="p-0" onClick={onRegisterClick} disabled={isLoading}>
             Register
           </Button>
         </div>

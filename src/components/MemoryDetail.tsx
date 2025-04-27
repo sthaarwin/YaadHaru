@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { X, Plus, Image, Save } from 'lucide-react';
+import { X, Plus, Image, Save, Loader2 } from 'lucide-react';
 import { Memory } from '@/types/memory';
 import PhotoMemory from './PhotoMemory';
 
@@ -14,27 +13,34 @@ interface MemoryDetailProps {
   memories: Memory[];
   onClose: () => void;
   onSave: (memories: Memory[]) => void;
+  isLoading?: boolean;
 }
 
 const MemoryDetail: React.FC<MemoryDetailProps> = ({
   date,
   memories,
   onClose,
-  onSave
+  onSave,
+  isLoading = false
 }) => {
   const [editableMemories, setEditableMemories] = useState<Memory[]>(memories);
+  
+  // Update editable memories when props change
+  React.useEffect(() => {
+    setEditableMemories(memories);
+  }, [memories]);
   
   const handleAddNote = () => {
     setEditableMemories([
       ...editableMemories,
-      { id: Date.now().toString(), type: 'note', content: '', createdAt: new Date() }
+      { id: `temp_${Date.now()}`, type: 'note', content: '', createdAt: new Date() }
     ]);
   };
   
   const handleAddPhoto = () => {
     setEditableMemories([
       ...editableMemories,
-      { id: Date.now().toString(), type: 'photo', content: '', createdAt: new Date() }
+      { id: `temp_${Date.now()}`, type: 'photo', content: '', createdAt: new Date() }
     ]);
   };
   
@@ -71,7 +77,12 @@ const MemoryDetail: React.FC<MemoryDetailProps> = ({
         </CardHeader>
         
         <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-          {editableMemories.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 size={24} className="animate-spin text-primary mr-2" />
+              <span>Loading memories...</span>
+            </div>
+          ) : editableMemories.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               No memories for this day yet. Add a note or photo to get started.
             </div>
@@ -106,15 +117,23 @@ const MemoryDetail: React.FC<MemoryDetailProps> = ({
         
         <CardFooter className="flex justify-between border-t p-4">
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleAddNote}>
+            <Button variant="outline" size="sm" onClick={handleAddNote} disabled={isLoading}>
               <Plus size={16} className="mr-1" /> Note
             </Button>
-            <Button variant="outline" size="sm" onClick={handleAddPhoto}>
+            <Button variant="outline" size="sm" onClick={handleAddPhoto} disabled={isLoading}>
               <Image size={16} className="mr-1" /> Photo
             </Button>
           </div>
-          <Button onClick={handleSave}>
-            <Save size={16} className="mr-1" /> Save Memories
+          <Button onClick={handleSave} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin mr-1" /> Saving...
+              </>
+            ) : (
+              <>
+                <Save size={16} className="mr-1" /> Save Memories
+              </>
+            )}
           </Button>
         </CardFooter>
       </Card>
