@@ -140,7 +140,7 @@ export const memoryAPI = {
     
     if (backendAvailable) {
       try {
-        const response = await strapiClient.get('/api/memory', {
+        const response = await strapiClient.get('/api/memories', {
           params: {
             filters: {
               dateKey: {
@@ -202,7 +202,7 @@ export const memoryAPI = {
     
     if (backendAvailable) {
       try {
-        const existingResponse = await strapiClient.get('/api/memory', {
+        const existingResponse = await strapiClient.get('/api/memories', {
           params: {
             filters: {
               dateKey: {
@@ -229,15 +229,15 @@ export const memoryAPI = {
           };
           
           if (memory.id && memory.id.includes('_')) {
-            await strapiClient.post('/api/memory', { data: memoryData });
+            await strapiClient.post('/api/memories', { data: memoryData });
           } else {
-            await strapiClient.put(`/api/memory/${memory.id}`, { data: memoryData });
+            await strapiClient.put(`/api/memories/${memory.id}`, { data: memoryData });
             existingIds.delete(memory.id);
           }
         }
         
         for (const idToDelete of existingIds) {
-          await strapiClient.delete(`/api/memory/${idToDelete}`);
+          await strapiClient.delete(`/api/memories/${idToDelete}`);
         }
         
         return true;
@@ -283,7 +283,7 @@ export const memoryAPI = {
         const startDateKey = formatDateKey(startDate);
         const endDateKey = formatDateKey(endDate);
         
-        const response = await strapiClient.get('/api/memory', {
+        const response = await strapiClient.get('/api/memories', {
           params: {
             filters: {
               dateKey: {

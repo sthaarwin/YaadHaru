@@ -37,7 +37,7 @@ export const checkMemoriesApiAvailability = async (): Promise<boolean> => {
   
   try {
     // Make a lightweight call to check if the memories endpoint exists
-    await axios.get(`${API_URL}/api/memory?pagination[pageSize]=1`, { 
+    await axios.get(`${API_URL}/api/memories?pagination[pageSize]=1`, { 
       timeout: 2000 // Short timeout
     });
     

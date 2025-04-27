@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "memories",
+  "info": {
+    "singularName": "memory",
+    "pluralName": "memories",
+    "displayName": "Memory",
+    "description": "User memories for specific dates"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "type": {
+      "type": "enumeration",
+      "enum": ["note", "photo"],
+      "required": true
+    },
+    "content": {
+      "type": "text",
+      "required": true
+    },
+    "dateKey": {
+      "type": "string",
+      "required": true
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "memories"
+    }
+  }
+}
